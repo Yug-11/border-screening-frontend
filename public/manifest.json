@@ -1,0 +1,16 @@
+{
+  "name": "Border Identity and Document Screening",
+  "short_name": "Border Screening",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#172554",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
+

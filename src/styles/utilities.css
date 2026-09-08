@@ -1,0 +1,53 @@
+@utility page-shell {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding: 1.5rem 1rem;
+  @media (min-width: 640px) {
+    padding: 2rem;
+  }
+}
+
+@utility field-control {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid var(--color-control);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  transition: border-color 120ms;
+  &::placeholder {
+    color: var(--color-muted);
+  }
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+  }
+  &[aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+  &:disabled {
+    background: var(--color-subtle);
+    color: var(--color-muted);
+  }
+}
+
+@utility icon-sm {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  stroke-width: 1.75;
+}
+@utility icon-md {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  stroke-width: 1.75;
+}
+@utility icon-lg {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  stroke-width: 1.75;
+}
