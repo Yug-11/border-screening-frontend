@@ -1,51 +1,132 @@
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
+
 import AlertBanner from '../../../components/feedback/AlertBanner';
 import PageHeader from '../../../components/ui/PageHeader';
-import { mockScreeningProgress } from '../../../data/mockScreeningProgress';
+
 import CurrentAnalysisPanel from '../../../features/screening/components/CurrentAnalysisPanel';
 import ScreeningActivity from '../../../features/screening/components/ScreeningActivity';
 import ScreeningDocumentSummary from '../../../features/screening/components/ScreeningDocumentSummary';
 import ScreeningPipeline from '../../../features/screening/components/ScreeningPipeline';
 import ScreeningProgressHeader from '../../../features/screening/components/ScreeningProgressHeader';
 import ScreeningSystemStatus from '../../../features/screening/components/ScreeningSystemStatus';
+
 import useScreeningProgress from '../../../features/screening/hooks/useScreeningProgress';
 
 export default function ScreeningProgressPage() {
   const navigate = useNavigate();
-  const screening = useScreeningProgress();
+  const location = useLocation();
+
+  // Files passed from DocumentUploadPage
+  const documentFile = location.state?.documentFile;
+  const verificationFile = location.state?.verificationFile;
+
+  console.log('PROGRESS PAGE - document:', documentFile);
+  console.log('PROGRESS PAGE - verification:', verificationFile);
+
+  const screening = useScreeningProgress(
+    documentFile,
+    verificationFile,
+  );
+
+  function handleViewResult() {
+    if (!screening?.screeningId) {
+      return;
+    }
+
+    navigate('/duty-officer/screening/result', {
+      state: {
+        screeningId: screening.screeningId,
+      },
+    });
+  }
+
   return (
     <>
       <PageHeader
         title="Automated Screening"
         description="Document and identity checks are being performed automatically."
-        eyebrow={mockScreeningProgress.checkpoint}
+        eyebrow="Live Backend Screening"
       />
+
+      {!documentFile && (
+        <AlertBanner
+          variant="danger"
+          title="No document was provided"
+          announce
+        >
+          No document was passed from the document capture page.
+          Return to document capture and start the screening again.
+        </AlertBanner>
+      )}
+
       <ScreeningProgressHeader
         screening={screening}
-        context={mockScreeningProgress}
-        onViewResult={() =>
-          navigate('/duty-officer/screening/result', {
-            state: { demoScenario: screening.warnings.length ? 'medium' : 'low' },
-          })
-        }
+        context={{
+          checkpoint: 'Live Backend Screening',
+        }}
+        onViewResult={handleViewResult}
       />
+
       <div className="grid items-start gap-6 lg:grid-cols-5">
         <div className="min-w-0 lg:col-span-3">
-          <ScreeningPipeline steps={screening.steps} processedCount={screening.processedCount} />
+          <ScreeningPipeline
+            steps={screening.steps || []}
+            processedCount={screening.processedCount || 0}
+          />
         </div>
+
         <div className="min-w-0 space-y-6 lg:col-span-2">
-          <CurrentAnalysisPanel screening={screening} />
-          <AlertBanner variant="info" title="Automated Screening">
-            In the connected system, the screening engine processes submitted documents
-            automatically. Officer action is only required if an exception or elevated risk is
-            detected. This demo does not run those checks.
-          </AlertBanner>
+          <CurrentAnalysisPanel
+            screening={screening}
+          />
+
+          {screening.error && (
+            <AlertBanner
+              variant="danger"
+              title="Screening failed"
+              announce
+            >
+              {screening.error}
+            </AlertBanner>
+          )}
+
+          {!screening.error &&
+            screening.status === 'running' && (
+              <AlertBanner
+                variant="info"
+                title="Live Backend Screening"
+              >
+                {verificationFile
+                  ? 'The screening engine is processing the document and verification image. Progress shown here comes directly from the backend.'
+                  : 'The screening engine is processing the submitted document. Progress shown here comes directly from the backend.'}
+              </AlertBanner>
+            )}
         </div>
       </div>
+
       <div className="grid items-start gap-6 lg:grid-cols-3">
-        <ScreeningDocumentSummary documents={mockScreeningProgress.documents} />
-        <ScreeningActivity events={screening.events} />
-        <ScreeningSystemStatus systems={mockScreeningProgress.systems} />
+        <ScreeningDocumentSummary
+          documents={
+            documentFile
+              ? [
+                  {
+                    id: 'screening-document',
+                    name: documentFile.name,
+                    mime: documentFile.type,
+                    size: documentFile.size,
+                  },
+                ]
+              : []
+          }
+        />
+
+        <ScreeningActivity
+          events={screening.events || []}
+        />
+
+        <ScreeningSystemStatus
+          systems={[]}
+        />
       </div>
     </>
   );

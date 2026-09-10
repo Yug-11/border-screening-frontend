@@ -1,146 +1,229 @@
-import { Play, RotateCcw, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import AlertBanner from '../../../components/feedback/AlertBanner';
 import Badge from '../../../components/ui/Badge';
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
 import ProgressBar from '../../../components/ui/ProgressBar';
-import Select from '../../../components/ui/Select';
-import { demoScreeningScenarios } from '../../../data/mockScreeningProgress';
 
 const titles = {
-  ready: 'Ready for Demo Screening',
+  ready: 'Ready for Screening',
   running: 'Automated Screening In Progress',
   completed: 'Automated Screening Complete',
-  failed: 'Automated Screening Stopped',
-};
-const statuses = {
-  ready: 'Waiting for demo start',
-  running: 'Analysis in progress',
-  completed: 'Demo sequence complete',
-  failed: 'Anomaly detected - demo stopped',
+  failed: 'Automated Screening Failed',
 };
 
-export default function ScreeningProgressHeader({ screening, context, onViewResult }) {
+const statuses = {
+  ready: 'Waiting to start screening',
+  running: 'Analysis is being performed by the screening engine',
+  completed: 'All screening stages have been processed',
+  failed: 'The screening process encountered an error',
+};
+
+export default function ScreeningProgressHeader({
+  screening,
+  context = {},
+  onViewResult,
+}) {
+  const status = screening?.status || 'ready';
+
+  const currentStepLabel =
+    screening?.currentStep?.label ||
+    screening?.currentStage?.label ||
+    'Preparing screening...';
+
+  const progress = Number.isFinite(screening?.progress)
+    ? screening.progress
+    : 0;
+
+  const risk = screening?.risk || 'Pending';
+
   const progressState =
-    screening.status === 'failed'
+    status === 'failed'
       ? 'failed'
-      : screening.warnings.length
-        ? 'warning'
-        : screening.status === 'completed'
-          ? 'completed'
-          : screening.status === 'ready'
-            ? 'pending'
-            : 'active';
+      : status === 'completed'
+        ? 'completed'
+        : status === 'running'
+          ? 'active'
+          : 'pending';
+
+  const checkpoint =
+    context?.checkpoint ||
+    screening?.checkpoint ||
+    'Authorized Screening Checkpoint';
+
+  const screeningId = screening?.screeningId || screening?.screening_id;
+
   return (
     <Card aria-labelledby="screening-overall-title">
       <div className="space-y-5">
+
+        {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 id="screening-overall-title" className="text-section font-semibold text-navy">
-              {titles[screening.status]}
+            <h2
+              id="screening-overall-title"
+              className="text-section font-semibold text-navy"
+            >
+              {titles[status] || 'Automated Screening'}
             </h2>
-            <p className="mt-1 text-body text-muted">{statuses[screening.status]}</p>
+
+            <p className="mt-1 text-body text-muted">
+              {statuses[status] || 'Screening system status'}
+            </p>
           </div>
-          <Badge variant="info">Demo screening</Badge>
+
+          <Badge variant={status === 'failed' ? 'danger' : 'info'}>
+            Live backend screening
+          </Badge>
         </div>
+
+        {/* Explanation */}
         <p className="text-caption text-muted">
-          Illustrative workflow only. No documents, images or identities are analyzed. Run Demo
-          Screening plays one finite sequence.
+          The screening engine is processing the submitted document through
+          document analysis, OCR, validation, identity checks, face
+          verification, risk assessment and audit logging.
         </p>
+
+        {/* Screening information */}
         <dl className="grid grid-cols-2 gap-4 text-body lg:grid-cols-4">
+
           <div>
-            <dt className="text-caption text-muted">Queue</dt>
-            <dd className="font-semibold tabular-nums text-navy">#{context.queueNumber}</dd>
+            <dt className="text-caption text-muted">
+              Checkpoint
+            </dt>
+
+            <dd className="font-semibold text-navy">
+              {checkpoint}
+            </dd>
           </div>
+
           <div>
-            <dt className="text-caption text-muted">Passenger</dt>
-            <dd className="font-semibold">{context.passenger}</dd>
+            <dt className="text-caption text-muted">
+              Screening ID
+            </dt>
+
+            <dd
+              className="truncate font-medium"
+              title={screeningId || 'Generating...'}
+            >
+              {screeningId || 'Generating...'}
+            </dd>
           </div>
+
           <div>
-            <dt className="text-caption text-muted">Current Stage</dt>
-            <dd className="font-medium">{screening.currentStep.label}</dd>
+            <dt className="text-caption text-muted">
+              Current Stage
+            </dt>
+
+            <dd className="font-medium">
+              {currentStepLabel}
+            </dd>
           </div>
+
           <div>
-            <dt className="text-caption text-muted">Risk</dt>
+            <dt className="text-caption text-muted">
+              Risk
+            </dt>
+
             <dd>
-              {screening.risk === 'Pending' ? (
+              {risk === 'Pending' ? (
                 <Badge>Pending</Badge>
               ) : (
-                <span className="text-info">{screening.risk}</span>
+                <span className="font-medium text-info">
+                  {risk}
+                </span>
               )}
             </dd>
           </div>
+
         </dl>
-        <ProgressBar value={screening.progress} status={progressState} label="Overall Progress" />
-        <p className="sr-only" role="status" aria-atomic="true">
-          {titles[screening.status]}. {screening.currentStep.label}. {screening.progress}% of demo
-          stages processed. Risk: {screening.risk}.
+
+        {/* Overall progress */}
+        <ProgressBar
+          value={progress}
+          status={progressState}
+          label="Overall Progress"
+        />
+
+        {/* Screen-reader status */}
+        <p
+          className="sr-only"
+          role="status"
+          aria-atomic="true"
+        >
+          {titles[status] || 'Automated Screening'}.
+          {' '}
+          {currentStepLabel}.
+          {' '}
+          {progress}% of screening stages processed.
+          {' '}
+          Risk: {risk}.
         </p>
-        {screening.warnings.map((warning) => (
+
+        {/* Error */}
+        {screening?.error && (
           <AlertBanner
-            key={warning.stageId}
-            variant="warning"
-            title="Review required - demo exception"
+            variant="danger"
+            title="Screening failed"
             announce
           >
-            {warning.message} This is a fictional warning, not a determination of fraud.
-          </AlertBanner>
-        ))}
-        {screening.failure && (
-          <AlertBanner variant="danger" title="Demo screening stopped" announce>
-            {screening.failure.message} No real MRZ was analyzed. Remaining stages have not run;
-            risk is pending.
+            {screening.error}
           </AlertBanner>
         )}
-        {screening.status === 'completed' && (
-          <p className="text-body text-muted">
-            {screening.warnings.length
-              ? 'The demo sequence is complete. The warning remains unresolved for officer review.'
-              : 'All nine demo stages are complete. No final risk score or clearance decision is shown here.'}
-          </p>
+
+        {/* Backend screening information */}
+        {!screening?.error && status === 'running' && (
+          <AlertBanner
+            variant="info"
+            title="Live Screening"
+          >
+            The backend screening engine is processing this case.
+            Progress updates are received directly from the screening
+            pipeline.
+          </AlertBanner>
         )}
-        <div className="space-y-3 border-t border-default pt-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <Select
-              label="Demo scenario"
-              value={screening.scenarioId}
-              disabled={screening.status === 'running'}
-              onChange={(event) => screening.selectScenario(event.target.value)}
-              options={demoScreeningScenarios.map((scenario) => ({
-                value: scenario.id,
-                label: scenario.label,
-              }))}
-              wrapperClassName="w-full sm:w-auto"
-            />
-            <Button
-              variant="secondary"
-              size="small"
-              disabled={screening.status === 'running'}
-              onClick={screening.runDemo}
-            >
-              <Play aria-hidden="true" className="icon-sm" />
-              Run Demo Screening
+
+        {/* Completed */}
+        {status === 'completed' && (
+          <AlertBanner
+            variant="success"
+            title="Screening complete"
+          >
+            All screening stages have completed. The screening result
+            is ready for review.
+          </AlertBanner>
+        )}
+
+        {/* Failed */}
+        {status === 'failed' && (
+          <AlertBanner
+            variant="danger"
+            title="Screening could not be completed"
+            announce
+          >
+            The screening engine reported an error. Please review the
+            error above and retry the screening if appropriate.
+          </AlertBanner>
+        )}
+
+        {/* Result button */}
+        {status === 'completed' && screeningId && (
+          <div className="flex flex-wrap items-center gap-3 border-t border-default pt-4">
+            <Button onClick={onViewResult}>
+              View Screening Result
+              <ArrowRight
+                aria-hidden="true"
+                className="icon-sm"
+              />
             </Button>
-            <Button
-              variant="ghost"
-              size="small"
-              disabled={screening.status === 'ready'}
-              onClick={screening.resetDemo}
-            >
-              <RotateCcw aria-hidden="true" className="icon-sm" />
-              Reset Demo
-            </Button>
-            {screening.status === 'completed' && (
-              <Button onClick={onViewResult}>
-                View Screening Result
-                <ArrowRight aria-hidden="true" className="icon-sm" />
-              </Button>
-            )}
+
+            <p className="text-caption text-muted">
+              Review OCR, identity validation, face verification,
+              risk assessment, audit and integrity information.
+            </p>
           </div>
-          <p className="text-caption text-muted">
-            {screening.scenario.description} Reset Demo stops the sequence and clears its events.
-          </p>
-        </div>
+        )}
+
       </div>
     </Card>
   );

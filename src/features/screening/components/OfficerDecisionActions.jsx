@@ -6,48 +6,106 @@ import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 
 export default function OfficerDecisionActions({ state }) {
   const confirmationRef = useRef(null);
+
+  const result = state?.result || {};
+  const decision = String(result.decision || 'UNKNOWN').toUpperCase();
+  const isCleared = Boolean(state?.cleared);
+  const isReviewing = state?.review === 'in-progress';
+  const isAcknowledged = state?.review === 'acknowledged';
+
   useEffect(() => {
-    if (state.cleared) confirmationRef.current?.focus();
-  }, [state.cleared]);
+    if (isCleared) {
+      confirmationRef.current?.focus();
+    }
+  }, [isCleared]);
+
+  const canClear =
+    !isCleared &&
+    decision === 'CLEAR';
+
   return (
     <Card aria-labelledby="recommendation-title">
-      <h2 id="recommendation-title" className="text-section font-semibold text-navy">
+      <h2
+        id="recommendation-title"
+        className="text-section font-semibold text-navy"
+      >
         System Recommendation
       </h2>
-      <p className="mt-2 text-body font-medium">{state.result.recommendation}</p>
+
+      <p className="mt-2 text-body font-medium">
+        {result.recommendation ||
+          'The backend screening engine has completed its assessment. Final action remains with the authorized officer.'}
+      </p>
+
       <div className="mt-4 space-y-3 border-t border-default pt-4">
-        <h3 className="text-card font-semibold text-navy">Officer Action</h3>
+        <h3 className="text-card font-semibold text-navy">
+          Officer Action
+        </h3>
+
         <div className="flex flex-wrap gap-2">
-          {state.scenario === 'low' ? (
-            <Button disabled={state.cleared} onClick={state.requestClearance}>
-              {state.cleared ? 'Passenger cleared' : 'Clear Passenger'}
+          {canClear ? (
+            <Button onClick={state.requestClearance}>
+              Clear Passenger
+            </Button>
+          ) : isCleared ? (
+            <Button disabled>
+              Passenger cleared
             </Button>
           ) : (
-            <Button onClick={state.openReview}>Review Case</Button>
+            <Button onClick={state.openReview}>
+              Review Case
+            </Button>
           )}
-          <Button variant="outline" onClick={state.openDetails}>
+
+          <Button
+            variant="outline"
+            onClick={state.openDetails}
+          >
             View Details
           </Button>
         </div>
-        {state.cleared && (
-          <div ref={confirmationRef} tabIndex={-1}>
-            <AlertBanner variant="success" title="Passenger cleared" announce>
-              Demo-only clearance. No decision was saved to a database.
+
+        {isCleared && (
+          <div
+            ref={confirmationRef}
+            tabIndex={-1}
+          >
+            <AlertBanner
+              variant="success"
+              title="Passenger cleared"
+              announce
+            >
+              The officer clearance decision was submitted to the backend
+              screening service.
             </AlertBanner>
           </div>
         )}
-        {state.review !== 'not-started' && (
-          <p role="status" className="text-body text-info">
-            {state.review === 'acknowledged'
-              ? 'Demo review acknowledged. No clearance decision recorded.'
-              : 'Demo review in progress. Passenger has not been cleared.'}
+
+        {isAcknowledged && (
+          <p
+            role="status"
+            className="text-body text-info"
+          >
+            Officer review acknowledged. Final clearance has not been
+            recorded.
           </p>
         )}
+
+        {isReviewing && !isAcknowledged && (
+          <p
+            role="status"
+            className="text-body text-info"
+          >
+            Officer review is in progress. Passenger has not been cleared.
+          </p>
+        )}
+
         <p className="text-caption text-muted">
-          All officer actions are local demo state. Changing scenario or leaving this screen resets
-          them.
+          Officer actions are connected to the screening workflow. Final
+          decisions remain under authorized officer control.
         </p>
       </div>
+
       <ConfirmDialog
         open={state.clearanceOpen}
         onClose={state.cancelClearance}
@@ -58,8 +116,8 @@ export default function OfficerDecisionActions({ state }) {
         cancelLabel="Cancel"
         variant="primary"
       >
-        This confirms the fictional passenger in this demo only. Nothing is persisted or sent to a
-        backend.
+        This action will submit the officer clearance decision for this
+        screening to the backend.
       </ConfirmDialog>
     </Card>
   );
