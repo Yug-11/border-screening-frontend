@@ -1,0 +1,42 @@
+[
+  {
+    "passport_number": "P-DEMO-0001",
+    "surname": "Sharma",
+    "given_names": "Aarav Sharma",
+    "date_of_birth": "14-06-1998",
+    "nationality": "INDIAN",
+    "date_of_expiry": "01-01-2036",
+    "status": "ACTIVE",
+    "watchlist_status": "CLEAR"
+  },
+  {
+    "passport_number": "P-DEMO-0002",
+    "surname": "Patel",
+    "given_names": "Ananya Patel",
+    "date_of_birth": "22-08-1997",
+    "nationality": "INDIAN",
+    "date_of_expiry": "15-03-2035",
+    "status": "ACTIVE",
+    "watchlist_status": "CLEAR"
+  },
+  {
+    "passport_number": "P-DEMO-0003",
+    "surname": "Kumar",
+    "given_names": "Rohan Kumar",
+    "date_of_birth": "05-12-1995",
+    "nationality": "INDIAN",
+    "date_of_expiry": "10-07-2024",
+    "status": "EXPIRED",
+    "watchlist_status": "CLEAR"
+  },
+  {
+    "passport_number": "P-DEMO-0004",
+    "surname": "Mehta",
+    "given_names": "Vikram Mehta",
+    "date_of_birth": "11-03-1994",
+    "nationality": "INDIAN",
+    "date_of_expiry": "20-09-2030",
+    "status": "ACTIVE",
+    "watchlist_status": "REVIEW"
+  }
+]
